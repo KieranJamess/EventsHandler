@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -16,20 +15,16 @@ type Event struct {
 	EndDateTime   time.Time          `json:"endDateTime"`
 }
 
-func eventHandler(client *mongo.Client) func(*fiber.Ctx) error {
+func handleEvents(client *mongo.Client) func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		switch c.Method() {
 		case fiber.MethodGet:
 			// Handle GET /events
-			getEventHandler(c, client)
+			handleGetEvents(c, client)
 
 		case fiber.MethodPost:
 			// Handle POST /events
-			posttEventHandler(c, client)
-
-		case fiber.MethodDelete:
-			// Handle DELETE /events
-			deleteEventHandler(c, client)
+			handlePostEvents(c, client)
 
 		default:
 			// Handle unsupported methods with an error response
@@ -39,37 +34,68 @@ func eventHandler(client *mongo.Client) func(*fiber.Ctx) error {
 	}
 }
 
-func getEventHandler(c *fiber.Ctx, client *mongo.Client) error {
+func handleGetEvents(c *fiber.Ctx, client *mongo.Client) error {
 	// Function for handling GET method on /events
-	// Get all events in BSON format from events mongo db table
+	var event Event
+	err := handleGet(c, client, "events", 5*time.Second, &event)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "GET event failed",
+		})
+	}
+
 	return nil
 }
 
-func posttEventHandler(c *fiber.Ctx, client *mongo.Client) error {
+func handlePostEvents(c *fiber.Ctx, client *mongo.Client) error {
 	// Function for handling POST method on /events
-	// Post event in events DB
-
-	ctx := context.TODO()
-
-	databaseName := "events"
-	collectionName := "events"
-	collection := client.Database(databaseName).Collection(collectionName)
+	// Post event in events DB, events collection
 
 	var event Event
-	if err := c.BodyParser(&event); err != nil {
-		return err
-	}
-
-	// Insert the event into the collection
-	_, err := collection.InsertOne(ctx, event)
+	err := handlePost(c, client, "events", 5*time.Second, &event)
 	if err != nil {
-		return err
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Post event failed",
+		})
 	}
 
-	return c.Status(fiber.StatusCreated).JSON(event)
+	return nil
 }
 
-func deleteEventHandler(c *fiber.Ctx, client *mongo.Client) error {
-	// Function for handling DELETE method on /events
+func handleEventById(client *mongo.Client) func(*fiber.Ctx) error {
+	return func(c *fiber.Ctx) error {
+		switch c.Method() {
+		case fiber.MethodGet:
+			// Handle GET /events
+			handleGetEventsById(c, client)
+
+		case fiber.MethodPatch:
+			// Handle PATCH /events
+			handlePatchEventsById(c, client)
+
+		default:
+			// Handle unsupported methods with an error response
+			return fiber.NewError(fiber.StatusMethodNotAllowed, "Method not allowed")
+		}
+		return nil
+	}
+}
+
+func handleGetEventsById(c *fiber.Ctx, client *mongo.Client) error {
+	// Function for handling GET method on /events by ID
+	var event Event
+	err := handleGetByID(c, client, "events", 5*time.Second, &event, c.Params("id"))
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "GET event by ID failed",
+		})
+	}
+
+	return nil
+}
+
+func handlePatchEventsById(c *fiber.Ctx, client *mongo.Client) error {
+	// Function for handling PATCH method on /events by ID
+
 	return nil
 }

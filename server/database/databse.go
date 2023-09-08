@@ -37,3 +37,7 @@ func CloseMongoDBConnection(client *mongo.Client) {
 	}
 	fmt.Println("Connection to MongoDB closed.")
 }
+
+func CreateCollection(databaseName string, collectionName string, client *mongo.Client) *mongo.Collection {
+	return client.Database(databaseName).Collection(collectionName)
+}
