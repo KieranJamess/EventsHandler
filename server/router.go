@@ -95,8 +95,6 @@ func handleGetByID(c *fiber.Ctx, client *mongo.Client, collectionName string, ti
 	}
 	filter := bson.M{"_id": idString}
 
-	fmt.Println(filter)
-
 	cursor, err := database.CreateCollection("events", collectionName, client).Find(ctx, filter)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -104,8 +102,6 @@ func handleGetByID(c *fiber.Ctx, client *mongo.Client, collectionName string, ti
 		})
 	}
 	defer cursor.Close(ctx)
-
-	fmt.Println(cursor)
 
 	if cursor.Next(ctx) {
 		item := reflect.New(reflect.TypeOf(format)).Interface()
