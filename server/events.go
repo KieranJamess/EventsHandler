@@ -5,13 +5,15 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type Event struct {
-	Name          string    `json:"name"`
-	StartDateTime time.Time `json:"startDateTime"`
-	EndDateTime   time.Time `json:"endDateTime"`
+	ID            primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	Name          string             `json:"name"`
+	StartDateTime time.Time          `json:"startDateTime"`
+	EndDateTime   time.Time          `json:"endDateTime"`
 }
 
 func eventHandler(client *mongo.Client) func(*fiber.Ctx) error {
@@ -64,7 +66,7 @@ func posttEventHandler(c *fiber.Ctx, client *mongo.Client) error {
 		return err
 	}
 
-	return c.SendString("Event successfully inserted into the database")
+	return c.Status(fiber.StatusCreated).JSON(event)
 }
 
 func deleteEventHandler(c *fiber.Ctx, client *mongo.Client) error {
