@@ -7,7 +7,13 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
+	"go.mongodb.org/mongo-driver/mongo"
 )
+
+type ServerComponents struct {
+	App    *fiber.App
+	Client *mongo.Client
+}
 
 func main() {
 	// load config
@@ -28,7 +34,8 @@ func main() {
 }
 
 func run(env config.EnvVars) (func(), error) {
-	app := buildServer(env)
+	components := buildServer(env)
+	app := components.App
 
 	// start the server
 	go func() {
@@ -37,23 +44,27 @@ func run(env config.EnvVars) (func(), error) {
 
 	// return a function to close the server and database
 	return func() {
+		database.CloseMongoDBConnection(components.Client)
 		app.Shutdown()
 	}, nil
 }
 
-func buildServer(env config.EnvVars) *fiber.App {
-	// create the fiber app
+func buildServer(env config.EnvVars) ServerComponents {
+	// Create the fiber app
 	app := fiber.New()
 
-	// add middleware
+	// Add middleware
 	app.Use(cors.New())
 	app.Use(logger.New())
 
-	//Connect to DB
+	// Connect to DB
 	client, _ := database.ConnectToMongoDB(env.MONGO_URL)
 
 	// Add event routes
 	eventRoutes(app, client)
 
-	return app
+	return ServerComponents{
+		App:    app,
+		Client: client,
+	}
 }
