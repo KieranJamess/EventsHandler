@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 	"time"
 
@@ -44,7 +43,6 @@ func handlePost(c *fiber.Ctx, client *mongo.Client, collectionName string, timeo
 	// Return a JSON response with the inserted event and a 201 Created status
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"message": "Event successfully created",
-		"event":   format,
 		"id":      insert.InsertedID,
 	})
 }
@@ -65,7 +63,6 @@ func handleGet(c *fiber.Ctx, client *mongo.Client, collectionName string, timeou
 	results := []interface{}{}
 	for cursor.Next(ctx) {
 		item := reflect.New(reflect.TypeOf(format)).Interface()
-		fmt.Println(cursor)
 		if err := cursor.Decode(item); err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"error": "Failed to decode event",
@@ -117,5 +114,43 @@ func handleGetByID(c *fiber.Ctx, client *mongo.Client, collectionName string, ti
 
 	return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 		"error": "Event not found",
+	})
+}
+
+func handlePatchById(c *fiber.Ctx, client *mongo.Client, collectionName string, timeout time.Duration, format interface{}, id string) error {
+	idString, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid ID string format",
+		})
+	}
+
+	filter := bson.M{"_id": idString}
+
+	if err := c.BodyParser(format); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid request body",
+		})
+	}
+
+	// Create an update document with the fields you want to update
+	update := bson.M{
+		"$set": format,
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	// Perform the update operation
+	_, err = client.Database("events").Collection(collectionName).UpdateOne(ctx, filter, update)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to update item in database",
+		})
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+		"message": "Event successfully Updated",
+		"id":      idString,
 	})
 }

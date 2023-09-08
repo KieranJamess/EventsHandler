@@ -96,6 +96,12 @@ func handleGetEventsById(c *fiber.Ctx, client *mongo.Client) error {
 
 func handlePatchEventsById(c *fiber.Ctx, client *mongo.Client) error {
 	// Function for handling PATCH method on /events by ID
-
+	var event Event
+	err := handlePatchById(c, client, "events", 5*time.Second, &event, c.Params("id"))
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "PATCH event by ID failed",
+		})
+	}
 	return nil
 }
