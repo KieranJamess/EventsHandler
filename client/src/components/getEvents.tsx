@@ -1,5 +1,10 @@
 import { useState, useEffect } from "react";
 
+interface ListEventsProps {
+  events: Event[] | null;
+  onSave: (editedEvent: Event) => void;
+}
+
 interface Event {
   id: number;
   name: string;
@@ -46,11 +51,6 @@ function GetEvents() {
   return <ListEvents events={events} onSave={handleSave} />;
 }
 
-interface ListEventsProps {
-  events: Event[] | null;
-  onSave: (editedEvent: Event) => void;
-}
-
 function ListEvents({ events, onSave }: ListEventsProps) {
   const [editableCell, setEditableCell] = useState<Event | null>(null);
 
@@ -83,7 +83,7 @@ function ListEvents({ events, onSave }: ListEventsProps) {
       </div>
       <div className="events-containers">
         {events !== null ? (
-          <table className="table table-striped table-hover">
+          <table className="table table-hover">
             <thead>
               <tr>
                 <th>Name</th>
