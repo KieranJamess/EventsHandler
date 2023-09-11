@@ -36,9 +36,9 @@ As part of loading the app, it also connets to the Mongo DB and will crash if no
 
 ![](.assets/server-1.png)
 
-We have a router.go file to manage routes and a events.go file to manage all the event requests and error on any unsupported methods. There is a POST request built for this but not used with the client
+We have a `router.go` file to manage routes and a `events.go` file to manage all the event requests and error on any unsupported methods. There is a POST request built for this but not used with the client
 
-There's also functions built for handling GET (with or without an ID), POST and PATCH events to build out further functionality
+There's also functions built for handling `GET` (with or without an ID), `POST` and `PATCH` events to build out further functionality
 
 As part of shutting down, when the application is killed, it safely disconnects from the database and safely signals to the OS.
 
